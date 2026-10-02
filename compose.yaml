@@ -1,0 +1,68 @@
+name: timepilot
+
+services:
+  db:
+    image: postgres:16-alpine@sha256:20edbde7749f822887a1a022ad526fde0a47d6b2be9a8364433605cf65099416
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-timepilot}
+      POSTGRES_USER: ${POSTGRES_USER:-timepilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-timepilot}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
+  migrate:
+    image: timepilot:${VERSION:-dev}
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+    command: ["migrate"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-timepilot}:${POSTGRES_PASSWORD:-timepilot}@db:5432/${POSTGRES_DB:-timepilot}?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: timepilot:${VERSION:-dev}
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+    command: ["server"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-timepilot}:${POSTGRES_PASSWORD:-timepilot}@db:5432/${POSTGRES_DB:-timepilot}?sslmode=disable
+      PORT: ${PORT:-8080}
+      HTTP_READ_TIMEOUT: ${HTTP_READ_TIMEOUT:-5s}
+      HTTP_WRITE_TIMEOUT: ${HTTP_WRITE_TIMEOUT:-40s}
+      SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-10s}
+      AI_PROVIDER: ${AI_PROVIDER:-disabled}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_TIMEOUT: ${AI_TIMEOUT:-30s}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/timepilot", "healthcheck", "http://localhost:${PORT:-8080}/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    init: true
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

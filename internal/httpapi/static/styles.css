@@ -1,0 +1,110 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #e8eef9;
+  background: #070d19;
+}
+
+* { box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(30, 64, 175, .22), transparent 34rem),
+    radial-gradient(circle at 90% 35%, rgba(15, 35, 75, .3), transparent 30rem),
+    #070d19;
+}
+::selection { color: #fff; background: #1d4ed8; }
+.container { width: min(900px, calc(100% - 32px)); margin: 48px auto; }
+header, .list-heading, .panel-heading, .actions, .task, .task-actions { display: flex; align-items: center; }
+header { justify-content: space-between; margin-bottom: 32px; }
+h1 { margin: 4px 0; color: #f8fafc; font-size: clamp(2rem, 6vw, 4rem); letter-spacing: -0.05em; }
+h2, h3, p { margin-top: 0; }
+.eyebrow { color: #60a5fa; font-weight: 800; letter-spacing: .16em; }
+.subtitle, .task p { color: #94a3b8; }
+.panel, .task {
+  background: rgba(15, 25, 45, .94);
+  border: 1px solid #263a5d;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+.panel { margin-bottom: 36px; }
+.panel-heading { justify-content: space-between; gap: 16px; }
+.panel-heading h2 { margin-bottom: 10px; }
+.ai-panel {
+  border-color: #294777;
+  background: linear-gradient(145deg, rgba(18, 34, 64, .98), rgba(10, 20, 38, .98));
+}
+form { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+label { display: grid; gap: 7px; color: #dbe7fa; font-weight: 650; }
+label:nth-of-type(2) { grid-column: 1 / -1; }
+input, textarea, select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #334a70;
+  border-radius: 8px;
+  color: #edf4ff;
+  font: inherit;
+  background: #091426;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+input::placeholder, textarea::placeholder { color: #60708c; }
+input:focus, textarea:focus, select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .18);
+}
+textarea { resize: vertical; }
+button {
+  border: 1px solid #3268d2;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #fff;
+  background: #1e4fae;
+  box-shadow: 0 8px 20px rgba(10, 52, 145, .25);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+button:hover { border-color: #4b83e8; background: #245fc7; transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:disabled { cursor: not-allowed; filter: grayscale(.7); opacity: .55; }
+.secondary { color: #c8d7ee; border-color: #33496e; background: #17243b; box-shadow: none; }
+.secondary:hover { border-color: #47628e; background: #20304d; }
+.danger { border-color: #7f3642; background: #612d3a; box-shadow: none; }
+.danger:hover { border-color: #a54a58; background: #793746; }
+.actions { gap: 10px; grid-column: 1 / -1; }
+.list-heading { justify-content: space-between; }
+.tasks { display: grid; gap: 12px; }
+.task { justify-content: space-between; gap: 18px; }
+.task h3 { margin: 8px 0 4px; }
+.task p { margin-bottom: 0; white-space: pre-wrap; }
+.task-actions { gap: 8px; flex-shrink: 0; }
+.status, .badge {
+  display: inline-block;
+  padding: 4px 9px;
+  border: 1px solid #344761;
+  border-radius: 999px;
+  color: #aebbd0;
+  background: #151f31;
+  font-size: .8rem;
+  font-weight: 750;
+}
+.status.in_progress { color: #f4c66b; border-color: #765728; background: #362b1a; }
+.status.done, .badge.online { color: #7dd3fc; border-color: #245a7d; background: #102d43; }
+.message { padding: 12px; color: #fda4af; border: 1px solid #713744; background: #351b25; border-radius: 8px; }
+.plan { margin: 18px 0 0; padding: 18px; border: 1px solid #294b78; border-radius: 10px; color: #d8e8ff; background: #0a182d; font: 500 .95rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+.empty { color: #8290a8; text-align: center; padding: 30px; }
+.hidden { display: none; }
+
+@media (max-width: 640px) {
+  .container { margin-top: 24px; }
+  header, .task { align-items: flex-start; flex-direction: column; }
+  form { grid-template-columns: 1fr; }
+  label:nth-of-type(2) { grid-column: auto; }
+  .actions { grid-column: auto; }
+  .task-actions { width: 100%; }
+  .task-actions button { flex: 1; }
+}

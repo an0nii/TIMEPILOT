@@ -1,0 +1,4 @@
+.env
+timepilot
+coverage.out
+.DS_Store
