@@ -1,4 +1,7 @@
 .env
-timepilot
+/timepilot
 coverage.out
 .DS_Store
+timepilot-kubernetes.zip
+screencast.mov
+screencast.mp4

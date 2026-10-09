@@ -1,4 +1,4 @@
-.PHONY: test build run up down logs migrate
+.PHONY: test build run up down logs migrate minikube-build k8s-deploy k8s-status k8s-scale k8s-url k8s-delete
 
 test:
 	go test ./...
@@ -20,3 +20,22 @@ logs:
 
 migrate:
 	go run ./cmd/timepilot migrate
+
+minikube-build:
+	./scripts/minikube-build.sh
+
+k8s-deploy:
+	./scripts/minikube-deploy.sh
+
+k8s-status:
+	kubectl get pods,services,statefulsets,deployments,jobs,pvc -n timepilot -o wide
+
+k8s-scale:
+	kubectl scale deployment/timepilot --replicas=3 -n timepilot
+	kubectl rollout status deployment/timepilot -n timepilot --timeout=180s
+
+k8s-url:
+	minikube service timepilot -n timepilot --url
+
+k8s-delete:
+	kubectl delete namespace timepilot --ignore-not-found

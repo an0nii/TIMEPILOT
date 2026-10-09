@@ -119,3 +119,25 @@ Dockerfile           воспроизводимая сборка одного о
 ```
 
 Backend использует стандартную маршрутизацию Go 1.22. Единственная внешняя Go-зависимость — PostgreSQL-драйвер `pgx`; запросы к AI выполняются стандартным HTTP-клиентом через единый интерфейс `planner.Planner`.
+
+## Запуск в minikube
+
+Docker, `kubectl` и minikube должны быть установлены. Кластер создаётся с Docker runtime, чтобы команда `minikube docker-env` направляла сборку во внутренний Docker daemon:
+
+```bash
+minikube start --driver=docker --container-runtime=docker --cpus=2 --memory=3072
+./scripts/minikube-build.sh
+./scripts/minikube-deploy.sh
+```
+
+Скрипт сначала выполняет требуемую сборку через `minikube docker-env`. Если внутренний Docker daemon не может скачать базовый образ из-за сетевых ограничений, он автоматически собирает образ host-демоном и загружает его официальной командой `minikube image load`.
+
+Проверка и масштабирование:
+
+```bash
+make k8s-status
+make k8s-scale
+minikube service timepilot -n timepilot
+```
+
+Манифесты находятся в `k8s/`. Подробный план записи демонстрации приведён в `СКРИНКАСТ.md`.

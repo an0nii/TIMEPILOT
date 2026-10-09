@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: timepilot-config
+  namespace: timepilot
+data:
+  PORT: "8080"
+  HTTP_READ_TIMEOUT: "5s"
+  HTTP_WRITE_TIMEOUT: "40s"
+  SHUTDOWN_TIMEOUT: "10s"
+  AI_PROVIDER: "disabled"
+  AI_TIMEOUT: "30s"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: timepilot-secrets
+  namespace: timepilot
+type: Opaque
+stringData:
+  # Только локальные демонстрационные данные. В production используйте secret manager.
+  POSTGRES_DB: timepilot
+  POSTGRES_USER: timepilot
+  POSTGRES_PASSWORD: timepilot-local-only
+  DATABASE_URL: postgres://timepilot:timepilot-local-only@postgres:5432/timepilot?sslmode=disable
