@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: victoria-logs-data
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: victoria-logs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-logs
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: victoria-logs
+    app.kubernetes.io/component: log-storage
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: victoria-logs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: victoria-logs
+        app.kubernetes.io/component: log-storage
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+        - name: victoria-logs
+          image: victoriametrics/victoria-logs:v1.53.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - -storageDataPath=/storage
+            - -retentionPeriod=7d
+            - -httpListenAddr=:9428
+            - -loggerFormat=json
+            - -http.shutdownDelay=5s
+          ports:
+            - name: http
+              containerPort: 9428
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /storage
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: victoria-logs-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoria-logs
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: victoria-logs
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: victoria-logs
+  ports:
+    - name: http
+      port: 9428
+      targetPort: http

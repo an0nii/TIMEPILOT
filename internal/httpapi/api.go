@@ -135,7 +135,11 @@ func (a *API) storeError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func (a *API) internalError(w http.ResponseWriter, r *http.Request, err error) {
-	a.logger.Error("request failed", "method", r.Method, "path", r.URL.Path, "error", err)
+	a.logger.Error("request failed",
+		"http.method", r.Method,
+		"url.path", r.URL.Path,
+		"error", err,
+	)
 	writeError(w, http.StatusInternalServerError, "internal server error")
 }
 
@@ -186,12 +190,19 @@ func writeJSONStatus(w http.ResponseWriter, status int, value any) {
 
 type statusWriter struct {
 	http.ResponseWriter
-	status int
+	status    int
+	bodyBytes int
 }
 
 func (w *statusWriter) WriteHeader(status int) {
 	w.status = status
 	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusWriter) Write(body []byte) (int, error) {
+	written, err := w.ResponseWriter.Write(body)
+	w.bodyBytes += written
+	return written, err
 }
 
 func (a *API) accessLog(next http.Handler) http.Handler {
@@ -200,9 +211,10 @@ func (a *API) accessLog(next http.Handler) http.Handler {
 		wrapped := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(wrapped, r)
 		a.logger.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"status", wrapped.status,
+			"http.method", r.Method,
+			"url.path", r.URL.Path,
+			"http.status_code", wrapped.status,
+			"http.response.body.size", wrapped.bodyBytes,
 			"duration_ms", time.Since(started).Milliseconds(),
 		)
 	})

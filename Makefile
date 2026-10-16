@@ -1,4 +1,4 @@
-.PHONY: test build run up down logs migrate minikube-build k8s-deploy k8s-status k8s-scale k8s-url k8s-delete
+.PHONY: test build run up down logs migrate minikube-build k8s-deploy k8s-status k8s-scale k8s-url k8s-delete logging-deploy logging-status logging-ui logging-check logging-delete
 
 test:
 	go test ./...
@@ -39,3 +39,18 @@ k8s-url:
 
 k8s-delete:
 	kubectl delete namespace timepilot --ignore-not-found
+
+logging-deploy:
+	./observability/deploy.sh
+
+logging-status:
+	kubectl get pods,services,pvc -n observability -o wide
+
+logging-ui:
+	kubectl port-forward -n observability service/victoria-logs 9428:9428
+
+logging-check:
+	./observability/check.sh
+
+logging-delete:
+	kubectl delete namespace observability --ignore-not-found

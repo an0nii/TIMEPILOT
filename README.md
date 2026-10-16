@@ -141,3 +141,14 @@ minikube service timepilot -n timepilot
 ```
 
 Манифесты находятся в `k8s/`. Подробный план записи демонстрации приведён в `СКРИНКАСТ.md`.
+
+## Централизованные логи
+
+Манифесты VictoriaLogs single-node и Vector DaemonSet, отдельный отчёт и
+инструкция по скриншотам находятся в [`observability/`](observability/README.md).
+
+```bash
+make logging-deploy
+make logging-check
+make logging-ui
+```
