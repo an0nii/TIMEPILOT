@@ -69,7 +69,7 @@ func (s *fakeStore) Delete(_ context.Context, id int64) error {
 }
 
 func testHandler(store task.Store) http.Handler {
-	return New(store, planner.Disabled(), slog.New(slog.NewTextHandler(io.Discard, nil)), "test")
+	return New(store, planner.Disabled(), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", NewMetrics())
 }
 
 func TestTaskCRUD(t *testing.T) {

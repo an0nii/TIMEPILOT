@@ -54,3 +54,16 @@ logging-check:
 
 logging-delete:
 	kubectl delete namespace observability --ignore-not-found
+
+.PHONY: monitoring-deploy monitoring-check monitoring-status monitoring-ui
+monitoring-deploy:
+	./monitoring/deploy.sh
+
+monitoring-check:
+	./monitoring/check.sh
+
+monitoring-status:
+	kubectl get pods,services,pvc -n monitoring
+
+monitoring-ui:
+	kubectl port-forward -n monitoring service/victoria-metrics 8428:8428

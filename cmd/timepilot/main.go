@@ -115,19 +115,31 @@ func serve(ctx context.Context, cfg config.Config, database *store.Postgres, aiP
 		return fmt.Errorf("connect to database: %w", err)
 	}
 
+	metrics := httpapi.NewMetrics()
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.New(database, aiPlanner, logger, version),
+		Handler:           httpapi.New(database, aiPlanner, logger, version, metrics),
 		ReadHeaderTimeout: cfg.ReadTimeout,
 		ReadTimeout:       cfg.ReadTimeout,
 		WriteTimeout:      cfg.WriteTimeout,
 		IdleTimeout:       60 * time.Second,
 	}
+	metricsServer := &http.Server{
+		Addr: cfg.MetricsAddr, Handler: metrics.Handler(),
+		ReadHeaderTimeout: 5 * time.Second, WriteTimeout: 10 * time.Second,
+		IdleTimeout: 30 * time.Second,
+	}
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
+	defer server.Close()
+	defer metricsServer.Close()
 	go func() {
 		logger.Info("server started", "port", cfg.Port, "version", version)
 		errCh <- server.ListenAndServe()
+	}()
+	go func() {
+		logger.Info("metrics server started", "address", cfg.MetricsAddr)
+		errCh <- metricsServer.ListenAndServe()
 	}()
 
 	select {
@@ -142,6 +154,9 @@ func serve(ctx context.Context, cfg config.Config, database *store.Postgres, aiP
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			return fmt.Errorf("graceful shutdown: %w", err)
+		}
+		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("metrics graceful shutdown: %w", err)
 		}
 		logger.Info("server stopped")
 		return nil

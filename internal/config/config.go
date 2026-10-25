@@ -10,6 +10,7 @@ import (
 type Config struct {
 	DatabaseURL     string
 	Port            string
+	MetricsAddr     string
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
 	ShutdownTimeout time.Duration
@@ -28,6 +29,7 @@ func Load() (Config, error) {
 	cfg := Config{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		Port:        valueOrDefault("PORT", "8080"),
+		MetricsAddr: valueOrDefault("METRICS_ADDR", "127.0.0.1:9090"),
 	}
 
 	if cfg.DatabaseURL == "" {

@@ -5,6 +5,7 @@ metadata:
   namespace: timepilot
 data:
   PORT: "8080"
+  METRICS_ADDR: ":9090"
   HTTP_READ_TIMEOUT: "5s"
   HTTP_WRITE_TIMEOUT: "40s"
   SHUTDOWN_TIMEOUT: "10s"

@@ -118,7 +118,9 @@ Dockerfile           воспроизводимая сборка одного о
 Отчёт.md             архитектура и разбор 12 факторов
 ```
 
-Backend использует стандартную маршрутизацию Go 1.22. Единственная внешняя Go-зависимость — PostgreSQL-драйвер `pgx`; запросы к AI выполняются стандартным HTTP-клиентом через единый интерфейс `planner.Planner`.
+Backend использует стандартную маршрутизацию Go 1.22, PostgreSQL-драйвер `pgx` и
+библиотеку Prometheus `client_golang` для метрик. Запросы к AI выполняются стандартным
+HTTP-клиентом через единый интерфейс `planner.Planner`.
 
 ## Запуск в minikube
 
@@ -151,4 +153,22 @@ minikube service timepilot -n timepilot
 make logging-deploy
 make logging-check
 make logging-ui
+```
+
+## Метрики
+
+Runtime-метрики Go и четыре бизнес-счётчика задач экспортируются на отдельном
+внутреннем порту 9090. PostgreSQL предоставляет метрики через sidecar postgres-exporter.
+VictoriaMetrics single устанавливается официальным Helm-чартом и обнаруживает Pod
+по аннотациям `prometheus.io/*`.
+
+Инструкция, Helm values, отдельный отчёт и сценарий скринкаста:
+[`monitoring/`](monitoring/README.md).
+
+```bash
+./scripts/minikube-build.sh
+make monitoring-deploy
+make monitoring-ui
+# В другом Terminal после port-forward:
+make monitoring-check
 ```

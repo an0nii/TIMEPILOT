@@ -24,10 +24,11 @@ type API struct {
 	logger  *slog.Logger
 	version string
 	planner planner.Planner
+	metrics *Metrics
 }
 
-func New(store task.Store, aiPlanner planner.Planner, logger *slog.Logger, version string) http.Handler {
-	api := &API{store: store, planner: aiPlanner, logger: logger, version: version}
+func New(store task.Store, aiPlanner planner.Planner, logger *slog.Logger, version string, metrics *Metrics) http.Handler {
+	api := &API{store: store, planner: aiPlanner, logger: logger, version: version, metrics: metrics}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.health)
 	mux.HandleFunc("GET /readyz", api.ready)
@@ -81,6 +82,7 @@ func (a *API) get(w http.ResponseWriter, r *http.Request) {
 		a.storeError(w, r, err)
 		return
 	}
+	a.metrics.viewed.Inc()
 	writeJSON(w, http.StatusOK, item)
 }
 
@@ -94,6 +96,7 @@ func (a *API) create(w http.ResponseWriter, r *http.Request) {
 		a.internalError(w, r, err)
 		return
 	}
+	a.metrics.created.Inc()
 	writeJSON(w, http.StatusCreated, item)
 }
 
@@ -111,6 +114,7 @@ func (a *API) update(w http.ResponseWriter, r *http.Request) {
 		a.storeError(w, r, err)
 		return
 	}
+	a.metrics.updated.Inc()
 	writeJSON(w, http.StatusOK, item)
 }
 
@@ -123,6 +127,7 @@ func (a *API) delete(w http.ResponseWriter, r *http.Request) {
 		a.storeError(w, r, err)
 		return
 	}
+	a.metrics.deleted.Inc()
 	w.WriteHeader(http.StatusNoContent)
 }
 

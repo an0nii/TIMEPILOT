@@ -4,5 +4,6 @@ coverage.out
 .DS_Store
 timepilot-kubernetes.zip
 timepilot-victorialogs.zip
+timepilot-metrics.zip
 screencast.mov
 screencast.mp4

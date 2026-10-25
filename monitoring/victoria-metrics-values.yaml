@@ -1,0 +1,54 @@
+# Official chart: victoria-metrics-single 0.29.0.
+server:
+  fullnameOverride: victoria-metrics
+  retentionPeriod: 7d
+  persistentVolume:
+    enabled: true
+    storageClassName: standard
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  scrape:
+    enabled: true
+    config:
+      global:
+        scrape_interval: 10s
+        scrape_timeout: 5s
+      scrape_configs:
+        - job_name: annotated-pods
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names: [timepilot]
+          relabel_configs:
+            - action: keep
+              source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+              regex: "true"
+            - action: drop
+              source_labels: [__meta_kubernetes_pod_container_init]
+              regex: "true"
+            # A Pod may declare multiple container ports: scrape only the annotated one.
+            - action: keep_if_equal
+              source_labels:
+                - __meta_kubernetes_pod_annotation_prometheus_io_port
+                - __meta_kubernetes_pod_container_port_number
+            - action: keep
+              source_labels: [__meta_kubernetes_pod_phase]
+              regex: Running
+            - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+              target_label: __metrics_path__
+              regex: (.+)
+            - source_labels: [__meta_kubernetes_namespace]
+              target_label: namespace
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: pod
+            - source_labels: [__meta_kubernetes_pod_container_name]
+              target_label: container
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              target_label: job
+              replacement: timepilot-$1

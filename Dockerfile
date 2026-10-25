@@ -13,6 +13,6 @@ FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/timepilot /timepilot
 USER 65532:65532
-EXPOSE 8080
+EXPOSE 8080 9090
 ENTRYPOINT ["/timepilot"]
 CMD ["server"]
