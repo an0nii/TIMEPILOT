@@ -67,3 +67,10 @@ monitoring-status:
 
 monitoring-ui:
 	kubectl port-forward -n monitoring service/victoria-metrics 8428:8428
+
+.PHONY: slo-deploy slo-check
+slo-deploy:
+	./slo/deploy.sh
+
+slo-check:
+	./slo/check.sh

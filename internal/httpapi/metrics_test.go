@@ -42,8 +42,11 @@ func TestBusinessMetricsCountOnlySuccessfulOperations(t *testing.T) {
 		t.Fatalf("unexpected metrics response: %d %s", response.Code, response.Header())
 	}
 	for _, sample := range []string{
-		"timepilot_tasks_created_total 1.0\n", "timepilot_tasks_viewed_total 1.0\n",
-		"timepilot_tasks_updated_total 1.0\n", "timepilot_tasks_deleted_total 1.0\n",
+		"timepilot_tasks_created_total{sli_version=\"1\"} 1.0\n", "timepilot_tasks_viewed_total{sli_version=\"1\"} 1.0\n",
+		"timepilot_tasks_updated_total{sli_version=\"1\"} 1.0\n", "timepilot_tasks_deleted_total 1.0\n",
+		"timepilot_task_attempts_total{operation=\"create\",sli_version=\"1\"} 1.0\n",
+		"timepilot_task_attempts_total{operation=\"view\",sli_version=\"1\"} 1.0\n",
+		"timepilot_task_attempts_total{operation=\"update\",sli_version=\"1\"} 1.0\n",
 		"go_goroutines ", "go_memstats_alloc_bytes ", "# EOF\n",
 	} {
 		if !strings.Contains(response.Body.String(), sample) {

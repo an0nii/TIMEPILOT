@@ -1,0 +1,26 @@
+{
+  "business_sli": {
+    "title": "Три SLI операций и цель SLO: окно 2 минуты",
+    "query": "label_set(100 * sum(increase(timepilot_tasks_created_total{sli_version=\"1\",namespace=\"timepilot\"}[2m])) / sum(increase(timepilot_task_attempts_total{sli_version=\"1\",namespace=\"timepilot\",operation=\"create\"}[2m])), \"indicator\", \"SLI create\") or label_set(100 * sum(increase(timepilot_tasks_viewed_total{sli_version=\"1\",namespace=\"timepilot\"}[2m])) / sum(increase(timepilot_task_attempts_total{sli_version=\"1\",namespace=\"timepilot\",operation=\"view\"}[2m])), \"indicator\", \"SLI view\") or label_set(100 * sum(increase(timepilot_tasks_updated_total{sli_version=\"1\",namespace=\"timepilot\"}[2m])) / sum(increase(timepilot_task_attempts_total{sli_version=\"1\",namespace=\"timepilot\",operation=\"update\"}[2m])), \"indicator\", \"SLI update\") or label_set(vector(99.9), \"indicator\", \"SLO target 99.9%\")"
+  },
+  "probe_sla": {
+    "title": "Внешний пробер: SLI, цель SLO и порог SLA; окно 2 минуты",
+    "query": "label_set(100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[2m])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m])), \"indicator\", \"Probe availability\") or label_set(vector(99.9), \"indicator\", \"SLO target 99.9%\") or label_set(vector(99), \"indicator\", \"SLA target 99%\")"
+  },
+  "compliance": {
+    "title": "Соответствие порогам на демонстрационном окне: 1 да, 0 нет",
+    "query": "(label_set((100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[2m])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m]))) >= bool 99.9, \"indicator\", \"SLO met on 2m window\") or label_set((100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[2m])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m]))) >= bool 99, \"indicator\", \"SLA met on 2m window\")) and on() (sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m])) > 0)"
+  },
+  "raw_metrics": {
+    "title": "Исходные метрики из прошлого ДЗ: успешные операции в секунду",
+    "query": "label_set(sum(rate(timepilot_tasks_created_total{sli_version=\"1\",namespace=\"timepilot\"}[1m])), \"operation\", \"create\") or label_set(sum(rate(timepilot_tasks_viewed_total{sli_version=\"1\",namespace=\"timepilot\"}[1m])), \"operation\", \"view\") or label_set(sum(rate(timepilot_tasks_updated_total{sli_version=\"1\",namespace=\"timepilot\"}[1m])), \"operation\", \"update\")"
+  },
+  "demo_mode": {
+    "title": "Режим приложения: 0 норма, 1 50% ошибок, 2 полный отказ операций",
+    "query": "timepilot_demo_mode{namespace=\"timepilot\",job=\"timepilot-web\"}"
+  },
+  "probe_coverage": {
+    "title": "Доступность самого пробера: отсутствие данных не означает успех",
+    "query": "up{namespace=\"timepilot\",job=\"timepilot-prober\"}"
+  }
+}

@@ -19,6 +19,7 @@ import (
 	"timepilot/internal/httpapi"
 	"timepilot/internal/migrate"
 	"timepilot/internal/planner"
+	"timepilot/internal/prober"
 	"timepilot/internal/store"
 )
 
@@ -74,14 +75,20 @@ func run(args []string, logger *slog.Logger) error {
 		}
 		return checkHealth(url)
 	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	if command == "probe" {
+		cfg, err := prober.LoadConfig()
+		if err != nil {
+			return err
+		}
+		return prober.Run(ctx, cfg, logger)
+	}
 
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -104,7 +111,7 @@ func run(args []string, logger *slog.Logger) error {
 		logger.Info("database migrations applied")
 		return nil
 	default:
-		return fmt.Errorf("unknown command %q; use server, migrate or healthcheck", command)
+		return fmt.Errorf("unknown command %q; use server, migrate, healthcheck or probe", command)
 	}
 }
 
@@ -116,6 +123,10 @@ func serve(ctx context.Context, cfg config.Config, database *store.Postgres, aiP
 	}
 
 	metrics := httpapi.NewMetrics()
+	if cfg.SLODemoEnabled {
+		metrics.EnableDemo()
+		logger.Warn("SLO fault injection is enabled on the internal metrics port")
+	}
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           httpapi.New(database, aiPlanner, logger, version, metrics),

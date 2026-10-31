@@ -1,0 +1,3 @@
+# Layer over monitoring/victoria-metrics-values.yaml: retain the full 30-day SLO window.
+server:
+  retentionPeriod: 31d

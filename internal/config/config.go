@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -11,6 +12,7 @@ type Config struct {
 	DatabaseURL     string
 	Port            string
 	MetricsAddr     string
+	SLODemoEnabled  bool
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
 	ShutdownTimeout time.Duration
@@ -37,6 +39,11 @@ func Load() (Config, error) {
 	}
 
 	var err error
+	if raw := os.Getenv("SLO_DEMO_ENABLED"); raw != "" {
+		if cfg.SLODemoEnabled, err = strconv.ParseBool(raw); err != nil {
+			return Config{}, fmt.Errorf("parse SLO_DEMO_ENABLED: %w", err)
+		}
+	}
 	if cfg.ReadTimeout, err = duration("HTTP_READ_TIMEOUT", 5*time.Second); err != nil {
 		return Config{}, err
 	}
