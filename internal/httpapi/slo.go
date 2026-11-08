@@ -4,13 +4,51 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"sync"
 	"sync/atomic"
 )
 
 type demoControl struct {
-	enabled bool
-	mode    atomic.Uint32
-	serial  atomic.Uint64
+	enabled     bool
+	mode        atomic.Uint32
+	serial      atomic.Uint64
+	runtimeMu   sync.Mutex
+	runtimeStop chan struct{}
+}
+
+// runtimePressure is bounded and only exposed when SLO_DEMO_ENABLED=true.
+// Repeated enable calls do not create more goroutines. Healthy mode releases them.
+func (d *demoControl) runtimePressure(enabled bool) {
+	d.runtimeMu.Lock()
+	defer d.runtimeMu.Unlock()
+	if d.runtimeStop != nil && !enabled {
+		close(d.runtimeStop)
+		d.runtimeStop = nil
+	}
+	if enabled && d.runtimeStop == nil {
+		d.runtimeStop = make(chan struct{})
+		for i := 0; i < 128; i++ {
+			go func(stop <-chan struct{}) { <-stop }(d.runtimeStop)
+		}
+	}
+}
+
+func (d *demoControl) setRuntime(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Enabled *bool `json:"enabled"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil || input.Enabled == nil {
+		writeError(w, http.StatusBadRequest, "expected enabled: true or false")
+		return
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		writeError(w, http.StatusBadRequest, "expected one JSON object")
+		return
+	}
+	d.runtimePressure(*input.Enabled)
+	writeJSON(w, http.StatusOK, map[string]bool{"enabled": *input.Enabled})
 }
 
 func (d *demoControl) shouldFail() bool {
@@ -54,6 +92,9 @@ func (d *demoControl) setMode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d.mode.Store(mode)
+	if mode == 0 {
+		d.runtimePressure(false)
+	}
 	writeJSON(w, http.StatusOK, map[string]string{"mode": input.Mode})
 }
 

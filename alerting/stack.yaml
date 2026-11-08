@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmalert
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: vmalert}
+  template:
+    metadata:
+      labels: {app: vmalert}
+    spec:
+      containers:
+        - name: vmalert
+          image: victoriametrics/vmalert:v1.134.0
+          args:
+            - -datasource.url=http://victoria-metrics.monitoring.svc.cluster.local:8428
+            - -notifier.url=http://alertmanager.monitoring.svc.cluster.local:9093
+            - -rule=/config/rules.yaml
+            - -rule.evalDelay=30s
+            - -httpListenAddr=:8880
+          ports: [{name: http, containerPort: 8880}]
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 200m, memory: 128Mi}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: config, mountPath: /config, readOnly: true}
+      volumes:
+        - name: config
+          configMap: {name: timepilot-alert-rules}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmalert
+spec:
+  selector: {app: vmalert}
+  ports: [{name: http, port: 8880, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: alertmanager}
+  template:
+    metadata:
+      labels: {app: alertmanager}
+    spec:
+      securityContext:
+        fsGroup: 65534
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.28.1
+          args:
+            - --config.file=/config/alertmanager.yaml
+            - --storage.path=/data
+            - --cluster.listen-address=
+          ports: [{name: http, containerPort: 9093}]
+          readinessProbe:
+            httpGet: {path: /-/ready, port: http}
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 200m, memory: 128Mi}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: config, mountPath: /config, readOnly: true}
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: config
+          configMap: {name: timepilot-alertmanager}
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+spec:
+  selector: {app: alertmanager}
+  ports: [{name: http, port: 9093, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-inbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: alert-inbox}
+  template:
+    metadata:
+      labels: {app: alert-inbox}
+    spec:
+      containers:
+        - name: inbox
+          image: timepilot:k8s
+          imagePullPolicy: Never
+          args: [notify]
+          ports: [{name: http, containerPort: 9095}]
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-inbox
+spec:
+  selector: {app: alert-inbox}
+  ports: [{name: http, port: 9095, targetPort: http}]

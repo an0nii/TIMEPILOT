@@ -18,6 +18,7 @@ import (
 	"timepilot/internal/config"
 	"timepilot/internal/httpapi"
 	"timepilot/internal/migrate"
+	"timepilot/internal/notifications"
 	"timepilot/internal/planner"
 	"timepilot/internal/prober"
 	"timepilot/internal/store"
@@ -77,6 +78,13 @@ func run(args []string, logger *slog.Logger) error {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	if command == "notify" {
+		addr := os.Getenv("ALERT_RECEIVER_ADDR")
+		if addr == "" {
+			addr = ":9095"
+		}
+		return notifications.Run(ctx, addr, logger)
+	}
 	if command == "probe" {
 		cfg, err := prober.LoadConfig()
 		if err != nil {
@@ -111,7 +119,7 @@ func run(args []string, logger *slog.Logger) error {
 		logger.Info("database migrations applied")
 		return nil
 	default:
-		return fmt.Errorf("unknown command %q; use server, migrate, healthcheck or probe", command)
+		return fmt.Errorf("unknown command %q; use server, migrate, healthcheck, probe or notify", command)
 	}
 }
 

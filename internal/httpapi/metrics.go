@@ -58,6 +58,7 @@ func (m *Metrics) Handler() http.Handler {
 	mux.Handle("GET /metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{EnableOpenMetrics: true}))
 	if m.demo.enabled {
 		mux.HandleFunc("POST /demo/mode", m.demo.setMode)
+		mux.HandleFunc("POST /demo/runtime", m.demo.setRuntime)
 	}
 	return mux
 }

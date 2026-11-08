@@ -1,0 +1,42 @@
+groups:
+  - name: timepilot
+    interval: 10s
+    rules:
+      - alert: TimePilotTaskCreationErrors
+        expr: |
+          (
+            1 - sum(increase(timepilot_tasks_created_total{namespace="timepilot",sli_version="1"}[2m]))
+              / sum(increase(timepilot_task_attempts_total{namespace="timepilot",sli_version="1",operation="create"}[2m]))
+          ) > 0.05
+          and on() sum(increase(timepilot_task_attempts_total{namespace="timepilot",sli_version="1",operation="create"}[2m])) >= 5
+        for: 30s
+        labels:
+          service: timepilot
+          severity: critical
+          category: business
+        annotations:
+          summary: "Ошибки создания задач превышают 5%"
+          description: "За последние 2 минуты доля неуспешных созданий — {{ $value | humanizePercentage }}. Минимум 5 завершённых операций; 4xx исключены. Проверьте PostgreSQL и логи API."
+      - alert: TimePilotProbeFailures
+        expr: |
+          sum(increase(timepilot_probe_requests_total{namespace="timepilot",result="failure"}[2m]))
+          / sum(increase(timepilot_probe_requests_total{namespace="timepilot"}[2m])) > 0.10
+          and on() sum(increase(timepilot_probe_requests_total{namespace="timepilot"}[2m])) >= 10
+        for: 30s
+        labels:
+          service: timepilot
+          severity: critical
+          category: business
+        annotations:
+          summary: "Проверочные CRUD-операции завершаются ошибками"
+          description: "Более 10% проверок create/view/update неуспешны за 2 минуты (минимум 10 проверок). Учитываются HTTP-ошибки, неверный ответ и таймаут 2 секунды. Проверьте Service, приложение и БД."
+      - alert: TimePilotGoGoroutinesHigh
+        expr: go_goroutines{namespace="timepilot",job="timepilot-web"} > 100
+        for: 30s
+        labels:
+          service: timepilot
+          severity: warning
+          category: runtime
+        annotations:
+          summary: "В процессе TimePilot более 100 горутин"
+          description: "В pod {{ $labels.pod }} число горутин = {{ $value }} в течение 30 секунд. Для небольшого сервиса это сигнал возможных зависших обработчиков или утечки. Проверьте нагрузку, внешние таймауты и профиль горутин."
