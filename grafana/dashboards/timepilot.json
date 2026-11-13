@@ -1,0 +1,1381 @@
+{
+  "uid": "timepilot-overview",
+  "id": null,
+  "title": "TimePilot · Обзор сервиса",
+  "description": "RED, Go runtime и request-based SLA синтетического CRUD-пробера. Пробелы мониторинга не считаются успешными проверками.",
+  "tags": [
+    "timepilot",
+    "sre"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "refresh": "10s",
+  "graphTooltip": 1,
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "title": "Сбор метрик API · UP",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "Scrape-доступность всех обнаруженных web-реплик. Не равна доступности пользовательского сценария; её проверяет пробер.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "min(up{namespace=\"timepilot\",job=\"timepilot-web\"})",
+          "legendFormat": "API",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 1
+    },
+    {
+      "title": "API · RPS",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 5,
+        "h": 4
+      },
+      "description": "Только /api/; Kubernetes health checks и frontend исключены. Пробер входит в трафик.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval]))",
+          "legendFormat": "RPS",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 2
+    },
+    {
+      "title": "API · ошибки 5xx",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 9,
+        "y": 0,
+        "w": 5,
+        "h": 4
+      },
+      "description": "100 × 5xx / все API-запросы. При отсутствии трафика результат не определён, не подменяется 0%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "(100 * (sum(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\",status=~\"5..\"}[$__rate_interval])) or 0 * sum(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval]))) / sum(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval]))) and on() (sum(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval])) > 0)",
+          "legendFormat": "5xx",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 3
+    },
+    {
+      "title": "API · p95 задержки",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 0,
+        "w": 5,
+        "h": 4
+      },
+      "description": "Оценка p95 по histogram buckets, не точный percentile. Включает время БД и ответы с ошибками.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by(le)(rate(timepilot_http_request_duration_seconds_bucket{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 4
+    },
+    {
+      "title": "PostgreSQL · UP",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 19,
+        "y": 0,
+        "w": 5,
+        "h": 4
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "min(pg_up{namespace=\"timepilot\",job=\"timepilot-database\"})",
+          "legendFormat": "Postgres",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 5
+    },
+    {
+      "type": "row",
+      "title": "SLA пробера · цель ≥99% за 30 дней · полнота истории обязательна",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 1
+      },
+      "id": 6
+    },
+    {
+      "title": "SLA · P(30d) по собранным проверкам",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "description": "SLA-метрика = 100 × успешные CRUD-проверки / все проверки за 30d; цель 99%. Число рассчитано только по имеющимся наблюдениям. При неполной истории это НЕ подтверждение выполнения месячного SLA. См. покрытие справа.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[30d])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[30d]))",
+          "legendFormat": "P(30d)",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 7
+    },
+    {
+      "title": "Покрытие мониторинга · 30d, оценка",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "description": "Число сохранённых scrape-попыток пробера / (30d ÷ 10s). При одной Recreate-реплике это приблизительная оценка полноты истории, не доступность. <100% означает, что периоды без наблюдений не позволяют подтвердить SLA за весь месяц.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(count_over_time(up{namespace=\"timepilot\",job=\"timepilot-prober\"}[30d])) / 259200",
+          "legendFormat": "Покрытие",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 99.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 8
+    },
+    {
+      "title": "Пробер · доступность за 2m (демо)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "description": "Короткое демонстрационное окно. Не заменяет SLA за 30 дней.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[2m])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m]))",
+          "legendFormat": "P(2m)",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 9
+    },
+    {
+      "title": "Пробер · успешность и цели на окне 2m",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 7
+      },
+      "description": "Для быстрой демонстрации поведения. Цели месячные, график 2m сам по себе не является месячным вердиктом SLA.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\",result=\"success\"}[2m])) / sum(increase(timepilot_probe_requests_total{namespace=\"timepilot\"}[2m]))",
+          "legendFormat": "Доступность пробера",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "vector(99)",
+          "legendFormat": "Порог SLA 99%",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "vector(99.9)",
+          "legendFormat": "Цель SLO 99.9%",
+          "refId": "C",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "id": 10
+    },
+    {
+      "title": "Пробер · результаты операций в секунду",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by(operation,result)(rate(timepilot_probe_requests_total{namespace=\"timepilot\"}[$__rate_interval]))",
+          "legendFormat": "{{operation}} · {{result}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 11
+    },
+    {
+      "type": "row",
+      "title": "RED · Rate, Errors, Duration — HTTP API",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "id": 12
+    },
+    {
+      "title": "RPS по методам API",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by(method)(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval]))",
+          "legendFormat": "{{method}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 13
+    },
+    {
+      "title": "HTTP-статусы API · RPS",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by(status)(rate(timepilot_http_requests_total{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval]))",
+          "legendFormat": "{{status}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 14
+    },
+    {
+      "title": "Задержка API · p50 / p95 / p99",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.5, sum by(le)(rate(timepilot_http_request_duration_seconds_bucket{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval])))",
+          "legendFormat": "p50",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by(le)(rate(timepilot_http_request_duration_seconds_bucket{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by(le)(rate(timepilot_http_request_duration_seconds_bucket{namespace=\"timepilot\",job=\"timepilot-web\",route=~\"/api/.*\"}[$__rate_interval])))",
+          "legendFormat": "p99",
+          "refId": "C",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 15
+    },
+    {
+      "title": "Успешные бизнес-операции в секунду",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(timepilot_tasks_created_total{namespace=\"timepilot\"}[$__rate_interval]))",
+          "legendFormat": "Создание",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(timepilot_tasks_viewed_total{namespace=\"timepilot\"}[$__rate_interval]))",
+          "legendFormat": "Чтение",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(timepilot_tasks_updated_total{namespace=\"timepilot\"}[$__rate_interval]))",
+          "legendFormat": "Обновление",
+          "refId": "C",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(timepilot_tasks_deleted_total{namespace=\"timepilot\"}[$__rate_interval]))",
+          "legendFormat": "Удаление",
+          "refId": "D",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 16
+    },
+    {
+      "title": "Три бизнес-SLI · окно 2m",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_tasks_created_total{namespace=\"timepilot\",sli_version=\"1\"}[2m])) / sum(increase(timepilot_task_attempts_total{namespace=\"timepilot\",sli_version=\"1\",operation=\"create\"}[2m]))",
+          "legendFormat": "create",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_tasks_viewed_total{namespace=\"timepilot\",sli_version=\"1\"}[2m])) / sum(increase(timepilot_task_attempts_total{namespace=\"timepilot\",sli_version=\"1\",operation=\"view\"}[2m]))",
+          "legendFormat": "view",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(increase(timepilot_tasks_updated_total{namespace=\"timepilot\",sli_version=\"1\"}[2m])) / sum(increase(timepilot_task_attempts_total{namespace=\"timepilot\",sli_version=\"1\",operation=\"update\"}[2m]))",
+          "legendFormat": "update",
+          "refId": "C",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "id": 17
+    },
+    {
+      "type": "row",
+      "title": "Go runtime · ресурсы процесса и признаки насыщения",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "id": 18
+    },
+    {
+      "title": "Go · горутины по pod",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Горутины — сигнал конкуренции/возможных зависаний, не прямой показатель использования CPU. Порог алерта прошлого ДЗ: >100 в течение 30s.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "go_goroutines{namespace=\"timepilot\",job=\"timepilot-web\"}",
+          "legendFormat": "{{pod}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 19
+    },
+    {
+      "title": "Go · heap и RSS",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 33,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Абсолютные байты, не проценты памяти ноды. RSS относится к процессу, а не только Go heap.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(go_memstats_heap_alloc_bytes{namespace=\"timepilot\",job=\"timepilot-web\"})",
+          "legendFormat": "Go heap",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(process_resident_memory_bytes{namespace=\"timepilot\",job=\"timepilot-web\"})",
+          "legendFormat": "RSS процесса",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 20
+    },
+    {
+      "title": "CPU web-процессов · ядра",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 33,
+        "w": 8,
+        "h": 7
+      },
+      "description": "CPU-секунды в секунду. Не проценты лимита Kubernetes и не CPU всей ноды.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(process_cpu_seconds_total{namespace=\"timepilot\",job=\"timepilot-web\"}[$__rate_interval]))",
+          "legendFormat": "Использование CPU",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 21
+    },
+    {
+      "title": "HTTP · запросы в обработке",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Gauge конкурентных запросов. При малом трафике scrape 10s может видеть 0. Это ожидаемо, а не No data.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "timepilot_http_in_flight_requests{namespace=\"timepilot\",job=\"timepilot-web\"}",
+          "legendFormat": "{{pod}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 22
+    },
+    {
+      "title": "Go · GC паузы · max выборки runtime",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 40,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Готовый summary Go collector, quantile=1: максимум сохранённой runtime-выборки GC-пауз. Это не глобальный максимум за выбранное окно Grafana и не histogram_quantile.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "go_gc_duration_seconds{namespace=\"timepilot\",job=\"timepilot-web\",quantile=\"1\"}",
+          "legendFormat": "{{pod}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 23
+    },
+    {
+      "title": "Цепочка мониторинга · scrape UP",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 40,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Scrape UP=1 не доказывает полноту месячной истории. Нет ряда/пробел означает отсутствие наблюдений, а не успех.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "up{namespace=\"timepilot\",job=~\"timepilot-web|timepilot-prober|timepilot-database\"}",
+          "legendFormat": "{{job}} · {{pod}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 24
+    }
+  ],
+  "links": [
+    {
+      "title": "PostgreSQL Exporter",
+      "type": "link",
+      "url": "/d/timepilot-postgres",
+      "targetBlank": false
+    }
+  ]
+}

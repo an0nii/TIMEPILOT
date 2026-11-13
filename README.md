@@ -185,3 +185,7 @@ make monitoring-check
 ## Алерты
 
 Правила бизнес-метрик и Go runtime, Alertmanager, локальные уведомления и скриншоты: [alerting/README.md](alerting/README.md). Отдельный [отчёт](alerting/Отчёт.md).
+
+## Grafana
+
+Дашборд приложения (HTTP RED, Go runtime, SLA пробера), импортированный PostgreSQL Exporter, экспорт JSON и скриншоты: [grafana/README.md](grafana/README.md). [Отчёт](grafana/Отчёт.md).

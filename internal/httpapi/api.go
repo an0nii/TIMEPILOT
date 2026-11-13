@@ -46,7 +46,7 @@ func New(store task.Store, aiPlanner planner.Planner, logger *slog.Logger, versi
 	}
 	mux.Handle("GET /", http.FileServer(http.FS(assets)))
 
-	return api.recoverPanic(api.accessLog(mux))
+	return api.observeHTTP(api.recoverPanic(api.accessLog(mux)), mux)
 }
 
 func (a *API) health(w http.ResponseWriter, _ *http.Request) {

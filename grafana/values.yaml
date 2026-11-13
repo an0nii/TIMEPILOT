@@ -1,0 +1,66 @@
+# grafana-community/grafana 14.4.1 (Grafana 13.3.1).
+fullnameOverride: grafana
+replicas: 1
+deploymentStrategy:
+  type: Recreate
+persistence:
+  enabled: true
+  storageClassName: standard
+  size: 1Gi
+initChownData:
+  enabled: false
+resources:
+  requests:
+    cpu: 100m
+    memory: 192Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+service:
+  type: ClusterIP
+  port: 80
+testFramework:
+  enabled: false
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        uid: victoriametrics
+        type: prometheus
+        access: proxy
+        url: http://victoria-metrics.monitoring.svc.cluster.local:8428
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: 10s
+          httpMethod: POST
+          prometheusType: Prometheus
+          prometheusVersion: 2.24.0
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: timepilot
+        orgId: 1
+        folder: TimePilot
+        type: file
+        disableDeletion: false
+        allowUiUpdates: false
+        updateIntervalSeconds: 10
+        options:
+          path: /var/lib/grafana/dashboards/timepilot
+dashboardsConfigMaps:
+  timepilot: timepilot-grafana-dashboard
+grafana.ini:
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+    check_for_plugin_updates: false
+  auth.anonymous:
+    enabled: true
+    org_role: Viewer
+  users:
+    default_theme: dark
+  dashboards:
+    default_home_dashboard_path: /var/lib/grafana/dashboards/timepilot/timepilot.json

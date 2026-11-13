@@ -1,0 +1,1331 @@
+{
+  "uid": "timepilot-postgres",
+  "id": null,
+  "title": "PostgreSQL Exporter · импорт #9628",
+  "description": "Импорт Grafana.com #9628 revision 8, адаптирован для текущих labels, PostgreSQL 16 и Grafana. Original: https://grafana.com/grafana/dashboards/9628-postgresql-database/",
+  "tags": [
+    "timepilot",
+    "sre"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "refresh": "10s",
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "victoriametrics"
+        },
+        "query": "label_values(pg_up{job=\"timepilot-database\"}, namespace)",
+        "refresh": 1,
+        "current": {
+          "text": "timepilot",
+          "value": "timepilot"
+        },
+        "options": []
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "victoriametrics"
+        },
+        "query": "label_values(pg_up{namespace=\"$namespace\",job=\"timepilot-database\"}, instance)",
+        "refresh": 1,
+        "options": []
+      },
+      {
+        "name": "datname",
+        "label": "Database",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "victoriametrics"
+        },
+        "query": "label_values(pg_stat_database_xact_commit{namespace=\"$namespace\",instance=\"$instance\"}, datname)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "timepilot",
+          "value": [
+            "timepilot"
+          ]
+        },
+        "options": []
+      },
+      {
+        "name": "mode",
+        "label": "Lock mode",
+        "type": "custom",
+        "query": "accessexclusivelock,accesssharelock,exclusivelock,rowexclusivelock,rowsharelock,sharelock,sharerowexclusivelock,shareupdateexclusivelock,sireadlock",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": []
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "PostgreSQL · UP",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "description": "",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_up{namespace=\"$namespace\",job=\"timepilot-database\",instance=\"$instance\"}",
+          "legendFormat": "PG",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 1
+    },
+    {
+      "title": "Max Connections",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "description": "Импортированная панель #38 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_settings_max_connections{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}",
+          "legendFormat": "Max Connections",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 2
+    },
+    {
+      "title": "Current fetch data",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "description": "Импортированная панель #10 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "SUM(pg_stat_database_tup_fetched{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"})",
+          "legendFormat": "Current fetch data",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 3
+    },
+    {
+      "title": "Current insert data",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "description": "Импортированная панель #11 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "SUM(pg_stat_database_tup_inserted{namespace=\"$namespace\", job=\"timepilot-database\", datname=~\"$datname\", instance=~\"$instance\"})",
+          "legendFormat": "Current insert data",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 4
+    },
+    {
+      "title": "Current update data",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #12 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "SUM(pg_stat_database_tup_updated{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"})",
+          "legendFormat": "Current update data",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 5
+    },
+    {
+      "title": "Exporter · CPU, не PostgreSQL",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #22 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "avg(rate(process_cpu_seconds_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m]))",
+          "legendFormat": "CPU Time",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 6
+    },
+    {
+      "title": "Exporter · память, не PostgreSQL",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #24 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "avg(process_resident_memory_bytes{namespace=\"$namespace\",job=\"timepilot-database\",instance=\"$instance\"})",
+          "legendFormat": "Resident Mem",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "avg(process_virtual_memory_bytes{namespace=\"$namespace\",job=\"timepilot-database\",instance=\"$instance\"})",
+          "legendFormat": "Virtual Mem",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 7
+    },
+    {
+      "title": "Exporter · открытые FD",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #26 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "process_open_fds{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}",
+          "legendFormat": "Open FD",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 8
+    },
+    {
+      "title": "Active sessions",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #1 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by(datname,state)(pg_stat_activity_count{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\", state=\"active\"})",
+          "legendFormat": "{{datname}}, s: {{state}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 9
+    },
+    {
+      "title": "Transactions",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #60 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_database_xact_commit{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "legendFormat": "{{datname}} commits",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_database_xact_rollback{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "legendFormat": "{{datname}} rollbacks",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 10
+    },
+    {
+      "title": "Update data",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #8 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_tup_updated{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"}",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 11
+    },
+    {
+      "title": "Fetch data (SELECT)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #5 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_tup_fetched{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"}",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 12
+    },
+    {
+      "title": "Insert data",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #6 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_tup_inserted{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"}",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 13
+    },
+    {
+      "title": "Lock tables",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #3 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_locks_count{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\", mode=~\"$mode\"}",
+          "legendFormat": "{{datname}},{{mode}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 14
+    },
+    {
+      "title": "Return data",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #14 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_tup_returned{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"}",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 15
+    },
+    {
+      "title": "Idle sessions",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #4 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by(datname,state)(pg_stat_activity_count{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\", state=~\"idle|idle in transaction|idle in transaction (aborted)\"})",
+          "legendFormat": "{{datname}}, s: {{state}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 16
+    },
+    {
+      "title": "Delete data",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #7 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_tup_deleted{datname=~\"$datname\", namespace=\"$namespace\", job=\"timepilot-database\", instance=~\"$instance\"}",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 17
+    },
+    {
+      "title": "Cache Hit Rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 32,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #62 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "pg_stat_database_blks_hit{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"} / (pg_stat_database_blks_read{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"} + pg_stat_database_blks_hit{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"})",
+          "legendFormat": "{{ datname }}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 18
+    },
+    {
+      "title": "Buffers (bgwriter)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 32,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #64 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_buffers_backend_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "buffers_backend",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_buffers_alloc_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "buffers_alloc",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_buffers_backend_fsync_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "backend_fsync",
+          "refId": "C",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_buffers_checkpoint_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "buffers_checkpoint",
+          "refId": "D",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_buffers_clean_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "buffers_clean",
+          "refId": "E",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 19
+    },
+    {
+      "title": "Conflicts/Deadlocks",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #66 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_database_conflicts{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "legendFormat": "{{datname}} conflicts",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_database_deadlocks{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "legendFormat": "{{datname}} deadlocks",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 20
+    },
+    {
+      "title": "Temp File (Bytes)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 39,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #68 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_database_temp_bytes{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "legendFormat": "{{datname}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 21
+    },
+    {
+      "title": "Checkpoint Stats",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 39,
+        "w": 8,
+        "h": 7
+      },
+      "description": "Импортированная панель #70 каталога Grafana #9628 rev8. Метки адаптированы к Pod service discovery TimePilot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_checkpoint_write_time_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "write_time - Total amount of time that has been spent in the portion of checkpoint processing where files are written to disk.",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "editorMode": "code",
+          "expr": "irate(pg_stat_bgwriter_checkpoint_sync_time_total{namespace=\"$namespace\", job=\"timepilot-database\", instance=\"$instance\"}[5m])",
+          "legendFormat": "sync_time - Total amount of time that has been spent in the portion of checkpoint processing where files are synchronized to disk.",
+          "refId": "B",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: ms/s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Нет данных"
+        },
+        "overrides": []
+      },
+      "id": 22
+    }
+  ],
+  "gnetId": 9628,
+  "links": [
+    {
+      "title": "TimePilot",
+      "type": "link",
+      "url": "/d/timepilot-overview",
+      "targetBlank": false
+    }
+  ]
+}
